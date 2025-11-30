@@ -83,9 +83,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   historyIndex: -1,
 
   // Game Control
-  initializeGame: (difficulty) => {
-    const puzzle = generatePuzzle(difficulty);
-    const sol = copyBoard(puzzle);
+  initializeGame: (diff) => {
+    const {puzzle, solution: sol} = generatePuzzle(diff);
 
     const cellBoard: Cell[][] = puzzle.map((row) =>
       row.map((value) => ({
@@ -100,7 +99,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       board: cellBoard,
       solution: sol as number[][],
-      difficulty,
+      difficulty: diff,
       timeElapsed: 0,
       isComplete: false,
       isPaused: false,
