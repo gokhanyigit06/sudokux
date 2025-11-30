@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   Animated,
   PanResponder,
@@ -24,18 +24,22 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
   onDragNumber,
 }) => {
   const t = translations[language];
-  const draggedNumber = useRef<number | null>(null);
+  const [draggedNumber, setDraggedNumber] = useState<number | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
   const createPanResponder = (num: number) => {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Start dragging if moved more than 5 pixels
+        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      },
       onPanResponderGrant: () => {
-        draggedNumber.current = num;
+        setDraggedNumber(num);
         Animated.spring(opacity, {
           toValue: 0.7,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }).start();
       },
       onPanResponderMove: Animated.event(
@@ -43,29 +47,31 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
         {useNativeDriver: false}
       ),
       onPanResponderRelease: (_, gestureState) => {
-        const {moveX, moveY} = gestureState;
+        const {moveX, moveY, dx, dy} = gestureState;
         
         // Reset animation
         Animated.parallel([
           Animated.spring(pan, {
             toValue: {x: 0, y: 0},
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.spring(opacity, {
             toValue: 1,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]).start();
 
-        if (draggedNumber.current !== null && onDragNumber) {
+        const wasDragged = Math.abs(dx) > 10 || Math.abs(dy) > 10;
+
+        if (wasDragged && onDragNumber) {
           // Call drag handler with coordinates
-          onDragNumber(draggedNumber.current, moveX, moveY);
+          onDragNumber(num, moveX, moveY);
         } else {
           // If not dragged far, treat as normal press
           onNumberPress(num);
         }
         
-        draggedNumber.current = null;
+        setDraggedNumber(null);
       },
     });
   };
@@ -84,8 +90,8 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
               style={[
                 styles.numberButton,
                 {
-                  transform: draggedNumber.current === num ? pan.getTranslateTransform() : [],
-                  opacity: draggedNumber.current === num ? opacity : 1,
+                  transform: draggedNumber === num ? pan.getTranslateTransform() : [],
+                  opacity: draggedNumber === num ? opacity : 1,
                 },
               ]}>
               <Text style={styles.numberText}>{num}</Text>
@@ -103,8 +109,8 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
               style={[
                 styles.numberButton,
                 {
-                  transform: draggedNumber.current === num ? pan.getTranslateTransform() : [],
-                  opacity: draggedNumber.current === num ? opacity : 1,
+                  transform: draggedNumber === num ? pan.getTranslateTransform() : [],
+                  opacity: draggedNumber === num ? opacity : 1,
                 },
               ]}>
               <Text style={styles.numberText}>{num}</Text>

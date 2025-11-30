@@ -13,15 +13,17 @@ import {
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {GameHeader} from './src/components/GameHeader';
-import {NumberPad} from './src/components/NumberPad';
+import {DraggableNumberPad} from './src/components/DraggableNumberPad';
 import {SudokuBoard} from './src/components/SudokuBoard';
-import {Cell, Difficulty} from './src/types';
+import {Cell, Difficulty, GameState} from './src/types';
 import {
   copyBoard,
   generatePuzzle,
+  getHint,
   isPuzzleComplete,
   isValidMove,
 } from './src/utils/sudoku';
+import {loadGameState, saveGameState, clearGameState, loadSettings, saveSettings} from './src/utils/storage';
 import {translations} from './src/utils/translations';
 
 type Language = 'tr' | 'en';
@@ -44,8 +46,63 @@ function App() {
   const [history, setHistory] = useState<Cell[][][]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [boardLayout, setBoardLayout] = useState<{x: number; y: number; width: number; height: number} | null>(null);
 
   const t = translations[language];
+
+  // Load saved game and settings on mount
+  useEffect(() => {
+    const loadSavedData = async () => {
+      try {
+        // Load settings
+        const savedSettings = await loadSettings();
+        if (savedSettings) {
+          if (savedSettings.language) setLanguage(savedSettings.language);
+          if (savedSettings.backgroundImage) setBackgroundImage(savedSettings.backgroundImage);
+        }
+
+        // Load game state
+        const savedGame = await loadGameState();
+        if (savedGame && savedGame.board && savedGame.board.length > 0) {
+          setBoard(savedGame.board);
+          setSolution(savedGame.solution);
+          setDifficulty(savedGame.difficulty);
+          setTimeElapsed(savedGame.timeElapsed || 0);
+          setHistory(savedGame.history || []);
+          setHintsUsed(savedGame.hintsUsed || 0);
+          setIsComplete(savedGame.isComplete || false);
+        } else {
+          // No saved game, start new one
+          initializeGame('medium');
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error);
+        initializeGame('medium');
+      }
+    };
+    loadSavedData();
+  }, []);
+
+  // Auto-save game state whenever it changes
+  useEffect(() => {
+    if (board.length > 0) {
+      const gameState: GameState = {
+        board,
+        solution,
+        difficulty,
+        timeElapsed,
+        history,
+        hintsUsed,
+        isComplete,
+      };
+      saveGameState(gameState);
+    }
+  }, [board, solution, difficulty, timeElapsed, history, hintsUsed, isComplete]);
+
+  // Auto-save settings
+  useEffect(() => {
+    saveSettings({language, backgroundImage});
+  }, [language, backgroundImage]);
 
   const initializeGame = (diff: Difficulty) => {
     const {puzzle, solution: sol} = generatePuzzle(diff);
@@ -70,10 +127,6 @@ function App() {
     setHintsUsed(0);
     setIsPaused(false);
   };
-
-  useEffect(() => {
-    initializeGame(difficulty);
-  }, []);
 
   useEffect(() => {
     if (isComplete || isPaused) {
@@ -192,6 +245,50 @@ function App() {
     }
   };
 
+  const handleDragNumber = (num: number, x: number, y: number) => {
+    if (isPaused || isComplete || !boardLayout) {
+      return;
+    }
+
+    // Use real board layout
+    const cellSize = boardLayout.width / 9;
+
+    // Calculate which cell was hit
+    const relativeX = x - boardLayout.x;
+    const relativeY = y - boardLayout.y;
+
+    if (relativeX >= 0 && relativeY >= 0 && relativeX < boardLayout.width && relativeY < boardLayout.height) {
+      const col = Math.floor(relativeX / cellSize);
+      const row = Math.floor(relativeY / cellSize);
+
+      if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+        // Select the cell and place the number
+        setSelectedCell({row, col});
+        
+        // Place the number if cell is not fixed
+        if (!board[row][col].isFixed) {
+          // Save current state to history
+          setHistory(prev => [...prev, board.map(r => r.map(cell => ({...cell})))]);
+
+          const newBoard = board.map(r => r.map(cell => ({...cell})));
+          newBoard[row][col].value = num;
+
+          // Validate the move
+          const boardValues = newBoard.map(r => r.map(c => c.value));
+          newBoard[row][col].isValid = isValidMove(boardValues, row, col, num);
+
+          setBoard(newBoard);
+
+          // Check if puzzle is complete
+          const complete = isPuzzleComplete(boardValues, solution);
+          if (complete) {
+            setIsComplete(true);
+          }
+        }
+      }
+    }
+  };
+
   const handleNewGame = () => {
     setShowNewGameDialog(true);
   };
@@ -257,11 +354,13 @@ function App() {
           board={board}
           selectedCell={selectedCell}
           onCellPress={handleCellPress}
+          onLayout={setBoardLayout}
         />
-        <NumberPad
+        <DraggableNumberPad
           onNumberPress={handleNumberPress}
           onClear={handleClear}
           language={language}
+          onDragNumber={handleDragNumber}
         />
       </View>
       {isPaused && (

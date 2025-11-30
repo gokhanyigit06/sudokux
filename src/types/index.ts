@@ -12,12 +12,14 @@ export interface Cell {
 
 export interface GameState {
   board: Cell[][];
-  solution: number[][];
+  solution: (number | null)[][];
   difficulty: Difficulty;
   timeElapsed: number;
   isComplete: boolean;
-  isPaused: boolean;
-  selectedCell: {row: number; col: number} | null;
+  isPaused?: boolean;
+  selectedCell?: {row: number; col: number} | null;
+  history?: Cell[][][];
+  hintsUsed?: number;
 }
 
 export interface GameHistory {
@@ -27,13 +29,13 @@ export interface GameHistory {
 
 export interface Settings {
   language: 'tr' | 'en';
-  darkMode: boolean;
-  soundEnabled: boolean;
-  hapticEnabled: boolean;
-  autoErrorCheck: boolean;
-  showTimer: boolean;
-  backgroundImage?: string;
-  isPencilMode: boolean; // Pencil/pen mode toggle
+  darkMode?: boolean;
+  soundEnabled?: boolean;
+  hapticEnabled?: boolean;
+  autoErrorCheck?: boolean;
+  showTimer?: boolean;
+  backgroundImage?: string | null;
+  isPencilMode?: boolean; // Pencil/pen mode toggle
 }
 
 export interface Statistics {
