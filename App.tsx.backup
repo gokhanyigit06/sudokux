@@ -38,6 +38,8 @@ function App() {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNewGameDialog, setShowNewGameDialog] = useState(false);
+  const [showDifficultyDialog, setShowDifficultyDialog] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [history, setHistory] = useState<Cell[][][]>([]);
   const [isPaused, setIsPaused] = useState(false);
@@ -191,22 +193,11 @@ function App() {
   };
 
   const handleNewGame = () => {
-    Alert.alert(t.newGame, t.confirmNewGame, [
-      {text: t.cancel, style: 'cancel'},
-      {text: t.yes, onPress: () => initializeGame(difficulty)},
-    ]);
+    setShowNewGameDialog(true);
   };
 
   const handleChangeDifficulty = () => {
-    Alert.alert(t.selectDifficulty, '', [
-      {text: t.beginner, onPress: () => initializeGame('beginner')},
-      {text: t.easy, onPress: () => initializeGame('easy')},
-      {text: t.medium, onPress: () => initializeGame('medium')},
-      {text: t.hard, onPress: () => initializeGame('hard')},
-      {text: t.expert, onPress: () => initializeGame('expert')},
-      {text: t.evil, onPress: () => initializeGame('evil')},
-      {text: t.cancel, style: 'cancel'},
-    ]);
+    setShowDifficultyDialog(true);
   };
 
   const handleSettings = () => {
@@ -236,65 +227,150 @@ function App() {
     setBackgroundImage(null);
   };
 
-  const BackgroundWrapper = ({children}: {children: React.ReactNode}) => {
-    if (backgroundImage) {
-      return (
-        <ImageBackground
-          source={{uri: backgroundImage}}
-          style={styles.container}
-          resizeMode="cover">
-          <View style={styles.imageOverlay} pointerEvents="box-none">
-            {children}
-          </View>
-        </ImageBackground>
-      );
-    }
-    return <View style={styles.container}>{children}</View>;
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
-      <BackgroundWrapper>
-        <View style={styles.content}>
-          <Text style={styles.title}>{t.title}</Text>
-          <GameHeader
-            difficulty={difficulty}
-            timeElapsed={timeElapsed}
-            onNewGame={handleNewGame}
-            onChangeDifficulty={handleChangeDifficulty}
-            onSettings={handleSettings}
-            onUndo={handleUndo}
-            onPause={handlePause}
-            onHint={handleHint}
-            canUndo={history.length > 0}
-            isPaused={isPaused}
-            language={language}
-          />
-          <SudokuBoard
-            board={board}
-            selectedCell={selectedCell}
-            onCellPress={handleCellPress}
-          />
-          <NumberPad
-            onNumberPress={handleNumberPress}
-            onClear={handleClear}
-            language={language}
-          />
+      {backgroundImage && (
+        <ImageBackground
+          source={{uri: backgroundImage}}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+          imageStyle={{opacity: 0.7}}
+        />
+      )}
+      <View style={styles.content}>
+        <Text style={styles.title}>{t.title}</Text>
+        <GameHeader
+          difficulty={difficulty}
+          timeElapsed={timeElapsed}
+          onNewGame={handleNewGame}
+          onChangeDifficulty={handleChangeDifficulty}
+          onSettings={handleSettings}
+          onUndo={handleUndo}
+          onPause={handlePause}
+          onHint={handleHint}
+          canUndo={history.length > 0}
+          isPaused={isPaused}
+          language={language}
+        />
+        <SudokuBoard
+          board={board}
+          selectedCell={selectedCell}
+          onCellPress={handleCellPress}
+        />
+        <NumberPad
+          onNumberPress={handleNumberPress}
+          onClear={handleClear}
+          language={language}
+        />
+      </View>
+      {isPaused && (
+        <View style={styles.pauseOverlay}>
+          <View style={styles.pauseBox}>
+            <Text style={styles.pauseText}>{t.pause.toUpperCase()}</Text>
+            <TouchableOpacity 
+              style={styles.resumeButton}
+              onPress={handlePause}>
+              <Text style={styles.resumeButtonText}>{t.resume}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        {isPaused && (
-          <View style={styles.pauseOverlay}>
-            <View style={styles.pauseBox}>
-              <Text style={styles.pauseText}>{t.pause.toUpperCase()}</Text>
-              <TouchableOpacity 
-                style={styles.resumeButton}
-                onPress={handlePause}>
-                <Text style={styles.resumeButtonText}>{t.resume}</Text>
+      )}
+
+      {/* New Game Dialog */}
+      <Modal
+        visible={showNewGameDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNewGameDialog(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.dialogContent}>
+            <Text style={styles.dialogTitle}>{t.newGame}</Text>
+            <Text style={styles.dialogMessage}>{t.confirmNewGame}</Text>
+            <View style={styles.dialogButtons}>
+              <TouchableOpacity
+                style={[styles.dialogButton, styles.cancelButton]}
+                onPress={() => setShowNewGameDialog(false)}>
+                <Text style={styles.cancelButtonText}>{t.cancel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dialogButton, styles.confirmButton]}
+                onPress={() => {
+                  setShowNewGameDialog(false);
+                  initializeGame(difficulty);
+                }}>
+                <Text style={styles.confirmButtonText}>{t.yes}</Text>
               </TouchableOpacity>
             </View>
           </View>
-        )}
-      </BackgroundWrapper>
+        </View>
+      </Modal>
+
+      {/* Difficulty Selection Dialog */}
+      <Modal
+        visible={showDifficultyDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDifficultyDialog(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.dialogContent}>
+            <Text style={styles.dialogTitle}>{t.selectDifficulty}</Text>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('beginner');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.beginner}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('easy');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.easy}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('medium');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.medium}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('hard');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.hard}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('expert');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.expert}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.difficultyButton}
+              onPress={() => {
+                setShowDifficultyDialog(false);
+                initializeGame('evil');
+              }}>
+              <Text style={styles.difficultyButtonText}>{t.evil}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dialogButton, styles.cancelButton, {marginTop: 10}]}
+              onPress={() => setShowDifficultyDialog(false)}>
+              <Text style={styles.cancelButtonText}>{t.cancel}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showSettings}
@@ -366,15 +442,23 @@ function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#2196F3',
+    backgroundColor: '#1a1a2e',
   },
   container: {
     flex: 1,
-    backgroundColor: '#2196F3',
+    backgroundColor: '#1a1a2e',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   imageOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    pointerEvents: 'none' as const,
   },
   scrollContent: {
     flexGrow: 1,
@@ -505,6 +589,65 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  dialogContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 25,
+    width: '85%',
+    maxWidth: 350,
+  },
+  dialogTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+  dialogMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#666',
+  },
+  dialogButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  dialogButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  difficultyButton: {
+    backgroundColor: '#2196F3',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  difficultyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
