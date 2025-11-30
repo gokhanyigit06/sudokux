@@ -283,7 +283,7 @@ function App() {
         transparent
         animationType="fade"
         onRequestClose={() => setShowNewGameDialog(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay} pointerEvents="auto">
           <View style={styles.dialogContent}>
             <Text style={styles.dialogTitle}>{t.newGame}</Text>
             <Text style={styles.dialogMessage}>{t.confirmNewGame}</Text>
@@ -312,7 +312,7 @@ function App() {
         transparent
         animationType="fade"
         onRequestClose={() => setShowDifficultyDialog(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay} pointerEvents="auto">
           <View style={styles.dialogContent}>
             <Text style={styles.dialogTitle}>{t.selectDifficulty}</Text>
             <TouchableOpacity
@@ -364,7 +364,7 @@ function App() {
               <Text style={styles.difficultyButtonText}>{t.evil}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.dialogButton, styles.cancelButton, {marginTop: 10}]}
+              style={[styles.cancelButton, {marginTop: 15, padding: 15, borderRadius: 10, alignItems: 'center'}]}
               onPress={() => setShowDifficultyDialog(false)}>
               <Text style={styles.cancelButtonText}>{t.cancel}</Text>
             </TouchableOpacity>
@@ -377,7 +377,7 @@ function App() {
         transparent
         animationType="slide"
         onRequestClose={() => setShowSettings(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay} pointerEvents="auto">
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t.settings}</Text>
             <Text style={styles.modalLabel}>{t.background}</Text>
@@ -480,6 +480,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
+    elevation: 1000,
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -487,6 +489,11 @@ const styles = StyleSheet.create({
     padding: 30,
     width: '80%',
     maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   modalTitle: {
     fontSize: 24,
@@ -596,6 +603,11 @@ const styles = StyleSheet.create({
     padding: 25,
     width: '85%',
     maxWidth: 350,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   dialogTitle: {
     fontSize: 20,
@@ -622,7 +634,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e0e0e0',
+    borderWidth: 1,
+    borderColor: '#999',
   },
   cancelButtonText: {
     color: '#333',
