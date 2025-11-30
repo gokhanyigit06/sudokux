@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Cell as CellType} from '../types';
+import {Cell as CellType, Difficulty} from '../types';
 import {SudokuCell} from './SudokuCell';
 
 interface SudokuBoardProps {
@@ -8,6 +8,7 @@ interface SudokuBoardProps {
   selectedCell: {row: number; col: number} | null;
   onCellPress: (row: number, col: number) => void;
   onLayout?: (layout: {x: number; y: number; width: number; height: number}) => void;
+  difficulty: Difficulty;
 }
 
 export const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -15,6 +16,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
   selectedCell,
   onCellPress,
   onLayout,
+  difficulty,
 }) => {
   const handleLayout = (event: any) => {
     const {x, y, width, height} = event.nativeEvent.layout;
@@ -35,6 +37,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
               col={colIndex}
               selectedCell={selectedCell}
               onCellPress={onCellPress}
+              difficulty={difficulty}
             />
           ))}
         </View>

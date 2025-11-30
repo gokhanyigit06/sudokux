@@ -162,18 +162,16 @@ function App() {
     const newBoard = board.map(r => r.map(cell => ({...cell})));
     newBoard[row][col].value = num;
 
-    // Validate the move
-    const boardValues = newBoard.map(r => r.map(c => c.value));
-    newBoard[row][col].isValid = isValidMove(
-      boardValues,
-      row,
-      col,
-      num,
-    );
+    // Validate the move - check correct solution
+    const isCorrectValue = solution[row][col] === num;
+    
+    // isValid = true if it matches the solution
+    newBoard[row][col].isValid = isCorrectValue;
 
     setBoard(newBoard);
 
     // Check if puzzle is complete
+    const boardValues = newBoard.map(r => r.map(c => c.value));
     const complete = isPuzzleComplete(
       boardValues,
       solution,
@@ -273,13 +271,15 @@ function App() {
           const newBoard = board.map(r => r.map(cell => ({...cell})));
           newBoard[row][col].value = num;
 
-          // Validate the move
-          const boardValues = newBoard.map(r => r.map(c => c.value));
-          newBoard[row][col].isValid = isValidMove(boardValues, row, col, num);
+          // Validate the move - check correct solution
+          const isCorrectValue = solution[row][col] === num;
+          
+          newBoard[row][col].isValid = isCorrectValue;
 
           setBoard(newBoard);
 
           // Check if puzzle is complete
+          const boardValues = newBoard.map(r => r.map(c => c.value));
           const complete = isPuzzleComplete(boardValues, solution);
           if (complete) {
             setIsComplete(true);
@@ -355,6 +355,7 @@ function App() {
           selectedCell={selectedCell}
           onCellPress={handleCellPress}
           onLayout={setBoardLayout}
+          difficulty={difficulty}
         />
         <DraggableNumberPad
           onNumberPress={handleNumberPress}

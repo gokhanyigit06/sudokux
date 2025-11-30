@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Cell} from '../types';
+import {Cell, Difficulty} from '../types';
 
 interface SudokuCellProps {
   cell: Cell;
@@ -8,6 +8,7 @@ interface SudokuCellProps {
   col: number;
   selectedCell: {row: number; col: number} | null;
   onCellPress: (row: number, col: number) => void;
+  difficulty: Difficulty;
 }
 
 export const SudokuCell: React.FC<SudokuCellProps> = ({
@@ -16,6 +17,7 @@ export const SudokuCell: React.FC<SudokuCellProps> = ({
   col,
   selectedCell,
   onCellPress,
+  difficulty,
 }) => {
   const isSelected = selectedCell?.row === row && selectedCell?.col === col;
   const isSameRow = selectedCell?.row === row;
@@ -25,6 +27,11 @@ export const SudokuCell: React.FC<SudokuCellProps> = ({
     Math.floor(selectedCell.row / 3) === Math.floor(row / 3) &&
     Math.floor(selectedCell.col / 3) === Math.floor(col / 3);
 
+  // Kolay ve orta seviyede anında geri bildirim
+  const showColorFeedback = difficulty === 'beginner' || difficulty === 'easy' || difficulty === 'medium';
+  const showInvalidBackground = showColorFeedback && !cell.isValid && cell.value !== null && !cell.isFixed;
+  const showValidBackground = showColorFeedback && cell.isValid && cell.value !== null && !cell.isFixed;
+
   return (
     <TouchableOpacity
       style={[
@@ -32,8 +39,9 @@ export const SudokuCell: React.FC<SudokuCellProps> = ({
         col % 3 === 2 && col !== 8 && styles.rightBorder,
         row % 3 === 2 && row !== 8 && styles.bottomBorder,
         isSelected && styles.selectedCell,
-        (isSameRow || isSameCol || isSameBox) && styles.highlightedCell,
-        !cell.isValid && styles.invalidCell,
+        (isSameRow || isSameCol || isSameBox) && !isSelected && styles.highlightedCell,
+        showInvalidBackground && styles.invalidCell,
+        showValidBackground && styles.validCell,
       ]}
       onPress={() => onCellPress(row, col)}
       disabled={cell.isFixed}>
@@ -41,7 +49,7 @@ export const SudokuCell: React.FC<SudokuCellProps> = ({
         style={[
           styles.cellText,
           cell.isFixed && styles.fixedCellText,
-          !cell.isValid && styles.invalidCellText,
+          !cell.isFixed && cell.value !== null && styles.userEnteredText,
         ]}>
         {cell.value || ''}
       </Text>
@@ -68,6 +76,9 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '700',
   },
+  userEnteredText: {
+    fontWeight: '600',
+  },
   rightBorder: {
     borderRightWidth: 2,
     borderRightColor: '#333',
@@ -85,7 +96,7 @@ const styles = StyleSheet.create({
   invalidCell: {
     backgroundColor: '#FFCDD2',
   },
-  invalidCellText: {
-    color: '#D32F2F',
+  validCell: {
+    backgroundColor: '#C8E6C9',
   },
 });
