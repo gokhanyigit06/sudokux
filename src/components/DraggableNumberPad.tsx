@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import {translations} from '../utils/translations';
+import {useThemeStore} from '../store/themeStore';
 
 interface DraggableNumberPadProps {
   onNumberPress: (num: number) => void;
@@ -23,6 +24,7 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
   language,
   onDragNumber,
 }) => {
+  const {theme} = useThemeStore();
   const t = translations[language];
   const [draggedNumber, setDraggedNumber] = useState<number | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
@@ -90,11 +92,12 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
               style={[
                 styles.numberButton,
                 {
+                  backgroundColor: theme.colors.surface,
                   transform: draggedNumber === num ? pan.getTranslateTransform() : [],
                   opacity: draggedNumber === num ? opacity : 1,
                 },
               ]}>
-              <Text style={styles.numberText}>{num}</Text>
+              <Text style={[styles.numberText, {color: theme.colors.text}]}>{num}</Text>
             </Animated.View>
           );
         })}
@@ -109,15 +112,16 @@ export const DraggableNumberPad: React.FC<DraggableNumberPadProps> = ({
               style={[
                 styles.numberButton,
                 {
+                  backgroundColor: theme.colors.surface,
                   transform: draggedNumber === num ? pan.getTranslateTransform() : [],
                   opacity: draggedNumber === num ? opacity : 1,
                 },
               ]}>
-              <Text style={styles.numberText}>{num}</Text>
+              <Text style={[styles.numberText, {color: theme.colors.text}]}>{num}</Text>
             </Animated.View>
           );
         })}
-        <TouchableOpacity style={styles.clearButton} onPress={onClear}>
+        <TouchableOpacity style={[styles.clearButton, {backgroundColor: theme.colors.error}]} onPress={onClear}>
           <Text style={styles.clearText}>{t.clear}</Text>
         </TouchableOpacity>
       </View>
@@ -137,7 +141,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   numberButton: {
-    backgroundColor: '#fff',
     width: 60,
     height: 60,
     borderRadius: 10,
@@ -152,10 +155,8 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
   },
   clearButton: {
-    backgroundColor: '#f44336',
     width: 60,
     height: 60,
     borderRadius: 10,

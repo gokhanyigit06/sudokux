@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Language, translations} from '../utils/translations';
+import {useThemeStore} from '../store/themeStore';
 
 interface NumberPadProps {
   onNumberPress: (num: number) => void;
@@ -13,6 +14,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
   onClear,
   language,
 }) => {
+  const {theme} = useThemeStore();
   const t = translations[language];
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -22,13 +24,13 @@ export const NumberPad: React.FC<NumberPadProps> = ({
         {numbers.map(num => (
           <TouchableOpacity
             key={num}
-            style={styles.numberButton}
+            style={[styles.numberButton, {backgroundColor: theme.colors.surface}]}
             onPress={() => onNumberPress(num)}>
-            <Text style={styles.numberText}>{num}</Text>
+            <Text style={[styles.numberText, {color: theme.colors.text}]}>{num}</Text>
           </TouchableOpacity>
         ))}
       </View>
-      <TouchableOpacity style={styles.clearButton} onPress={onClear}>
+      <TouchableOpacity style={[styles.clearButton, {backgroundColor: theme.colors.error}]} onPress={onClear}>
         <Text style={styles.clearText}>{t.clear}</Text>
       </TouchableOpacity>
     </View>
@@ -48,7 +50,6 @@ const styles = StyleSheet.create({
   numberButton: {
     width: 60,
     height: 60,
-    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
@@ -62,11 +63,9 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
   },
   clearButton: {
     marginTop: 15,
-    backgroundColor: '#FF5722',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,

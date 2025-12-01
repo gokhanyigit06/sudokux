@@ -2,6 +2,7 @@ import React from 'react';
 import {Alert, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Difficulty} from '../types';
 import {translations} from '../utils/translations';
+import {useThemeStore} from '../store/themeStore';
 
 interface GameHeaderProps {
   difficulty: Difficulty;
@@ -12,8 +13,10 @@ interface GameHeaderProps {
   onUndo?: () => void;
   onPause?: () => void;
   onHint?: () => void;
+  onPencilToggle?: () => void;
   canUndo?: boolean;
   isPaused?: boolean;
+  isPencilMode?: boolean;
   language: 'tr' | 'en';
 }
 
@@ -26,10 +29,13 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   onUndo,
   onPause,
   onHint,
+  onPencilToggle,
   canUndo = false,
   isPaused = false,
+  isPencilMode = false,
   language,
 }) => {
+  const {theme} = useThemeStore();
   const t = translations[language];
   
   const formatTime = (seconds: number): string => {
@@ -52,43 +58,51 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.infoContainer}>
+      <View style={[styles.infoContainer, {backgroundColor: theme.colors.surface}]}>
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
-            <Text style={styles.label}>{t.difficulty}</Text>
-            <Text style={styles.value}>{getDifficultyText()}</Text>
+            <Text style={[styles.label, {color: theme.colors.textSecondary}]}>{t.difficulty}</Text>
+            <Text style={[styles.value, {color: theme.colors.text}]}>{getDifficultyText()}</Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={styles.label}>{t.time}</Text>
-            <Text style={styles.value}>{formatTime(timeElapsed)}</Text>
+            <Text style={[styles.label, {color: theme.colors.textSecondary}]}>{t.time}</Text>
+            <Text style={[styles.value, {color: theme.colors.text}]}>{formatTime(timeElapsed)}</Text>
           </View>
         </View>
       </View>
       <View style={styles.buttonRow}>
         <TouchableOpacity 
-          style={styles.button} 
+          style={[styles.button, {backgroundColor: theme.colors.success}]} 
           onPress={onNewGame}
           activeOpacity={0.7}>
           <Text style={styles.buttonText}>{t.newGame}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.button} 
+          style={[styles.button, {backgroundColor: theme.colors.success}]} 
           onPress={onChangeDifficulty}
           activeOpacity={0.7}>
           <Text style={styles.buttonText}>{t.changeDifficulty}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.settingsButton} 
+          style={[styles.settingsButton, {backgroundColor: '#FF9800'}]} 
           onPress={onSettings}
           activeOpacity={0.7}>
           <Text style={styles.settingsText}>⚙️</Text>
         </TouchableOpacity>
       </View>
-      {(onUndo || onPause || onHint) && (
+      {(onUndo || onPause || onHint || onPencilToggle) && (
         <View style={[styles.buttonRow, {marginTop: 10}]}>
+          {onPencilToggle && (
+            <TouchableOpacity 
+              style={[styles.controlButton, {backgroundColor: isPencilMode ? '#9C27B0' : theme.colors.primary}]} 
+              onPress={onPencilToggle}
+              activeOpacity={0.7}>
+              <Text style={styles.controlButtonText}>✏️ {isPencilMode ? 'Normal' : 'Kalem'}</Text>
+            </TouchableOpacity>
+          )}
           {onUndo && (
             <TouchableOpacity 
-              style={[styles.controlButton, !canUndo && styles.controlButtonDisabled]} 
+              style={[styles.controlButton, {backgroundColor: canUndo ? theme.colors.primary : theme.colors.textSecondary, opacity: canUndo ? 1 : 0.5}]} 
               onPress={onUndo}
               disabled={!canUndo}
               activeOpacity={0.7}>
@@ -97,7 +111,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
           )}
           {onPause && (
             <TouchableOpacity 
-              style={styles.controlButton} 
+              style={[styles.controlButton, {backgroundColor: theme.colors.primary}]} 
               onPress={onPause}
               activeOpacity={0.7}>
               <Text style={styles.controlButtonText}>{isPaused ? '▶ ' + t.resume : '⏸ ' + t.pause}</Text>
@@ -105,7 +119,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
           )}
           {onHint && (
             <TouchableOpacity 
-              style={styles.controlButton} 
+              style={[styles.controlButton, {backgroundColor: theme.colors.primary}]} 
               onPress={onHint}
               activeOpacity={0.7}>
               <Text style={styles.controlButtonText}>💡 {t.hint}</Text>
@@ -122,7 +136,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   infoContainer: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
     marginBottom: 15,
@@ -141,13 +154,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 5,
   },
   value: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -155,7 +166,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#4CAF50',
     paddingVertical: 10,
     paddingHorizontal: 20,
     marginHorizontal: 5,
@@ -167,7 +177,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   settingsButton: {
-    backgroundColor: '#FF9800',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -177,15 +186,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   controlButton: {
-    backgroundColor: '#2196F3',
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 8,
     marginHorizontal: 5,
-  },
-  controlButtonDisabled: {
-    backgroundColor: '#BDBDBD',
-    opacity: 0.5,
   },
   controlButtonText: {
     color: '#fff',

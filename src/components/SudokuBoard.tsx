@@ -2,6 +2,7 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Cell as CellType, Difficulty} from '../types';
 import {SudokuCell} from './SudokuCell';
+import {useThemeStore} from '../store/themeStore';
 
 interface SudokuBoardProps {
   board: CellType[][];
@@ -18,6 +19,8 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
   onLayout,
   difficulty,
 }) => {
+  const {theme} = useThemeStore();
+
   const handleLayout = (event: any) => {
     const {x, y, width, height} = event.nativeEvent.layout;
     if (onLayout) {
@@ -26,7 +29,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
   };
 
   return (
-    <View style={styles.board} onLayout={handleLayout}>
+    <View style={[styles.board, {borderColor: theme.colors.text, backgroundColor: theme.colors.surface}]} onLayout={handleLayout}>
       {board.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((cell, colIndex) => (
@@ -49,8 +52,6 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
 const styles = StyleSheet.create({
   board: {
     borderWidth: 2,
-    borderColor: '#333',
-    backgroundColor: '#fff',
   },
   row: {
     flexDirection: 'row',
